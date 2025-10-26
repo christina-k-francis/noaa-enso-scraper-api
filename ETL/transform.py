@@ -9,7 +9,6 @@ Transforming NOAA's ENSO data by deriving useful metrics and adding historical c
 import xarray as xr
 import numpy as np
 from prefect import task, flow, get_run_logger
-from prefect.logging.loggers import disable_logger
 import logging
 import warnings
 
