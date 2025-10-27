@@ -185,13 +185,13 @@ def root():
 
 @app.get("/oni/data")
 def get_oni_data(
-    year: Optional[int] = Query(None, description="Filter by specific year (e.g., 2023)"),
-    enso_event: Optional[ENSOEvent] = Query(None, description="Filter by ENSO event type"),
-    season: Optional[Season] = Query(None, description="Filter by 3-month season"),
-    intensity: Optional[Intensity] = Query(None, description="Filter by intensity classification"),
-    min_oni: Optional[float] = Query(None, description="Minimum ONI value (inclusive)"),
-    max_oni: Optional[float] = Query(None, description="Maximum ONI value (inclusive)"),
-    limit: Optional[int] = Query(None, description="Limit number of results returned"),
+    year: int = Query(None, description="Filter by specific year (e.g., 2023)"),
+    enso_event: ENSOEvent = Query(None, description="Filter by ENSO event type"),
+    season: Season = Query(None, description="Filter by 3-month season"),
+    intensity: Intensity = Query(None, description="Filter by intensity classification"),
+    min_oni: float = Query(None, description="Minimum ONI value (inclusive)"),
+    max_oni: float = Query(None, description="Maximum ONI value (inclusive)"),
+    limit: int = Query(None, description="Limit number of results returned"),
 ):
     """
     Retrieve ONI data with flexible filtering options.
@@ -253,8 +253,8 @@ def get_oni_data(
 
 @app.get("/oni/stats")
 def get_oni_statistics(
-    year: Optional[int] = Query(None, description="Calculate stats for specific year"),
-    enso_event: Optional[ENSOEvent] = Query(None, description="Calculate stats for specific ENSO event"),
+    year: int = Query(None, description="Calculate stats for specific year"),
+    enso_event: ENSOEvent = Query(None, description="Calculate stats for specific ENSO event"),
 ):
     """
     Get statistical summary of ONI data.
@@ -353,7 +353,7 @@ def get_latest_oni(n: int = Query(12, description="Number of most recent observa
 @app.get("/oni/events")
 def get_enso_events(
     event_type: ENSOEvent = Query(..., description="Type of ENSO event to analyze"),
-    min_duration: Optional[int] = Query(None, description="Minimum event duration in months"),
+    min_duration: int = Query(None, description="Minimum event duration in months"),
 ):
     """
     Get information about ENSO events of a specific type.
