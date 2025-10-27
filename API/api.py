@@ -109,12 +109,12 @@ def load_oni_data() -> pd.DataFrame:
 # ---- Helper Filtering Function --------------------------------#
 def filter_dataframe(
     df: pd.DataFrame,
-    year: Optional[int] = None,
-    enso_event: Optional[ENSOEvent] = None,
-    season: Optional[Season] = None,
-    intensity: Optional[Intensity] = None,
-    min_oni: Optional[float] = None,
-    max_oni: Optional[float] = None,
+    year: int = None,
+    enso_event: ENSOEvent = None,
+    season: Season = None,
+    intensity: Intensity = None,
+    min_oni: float = None,
+    max_oni: float = None,
 ) -> pd.DataFrame:
     """
     description:
