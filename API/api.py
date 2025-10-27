@@ -71,6 +71,8 @@ def load_oni_data() -> pd.DataFrame:
         enhanced ONI file as a pandas dataframe
     """
 
+    bucket = 'noaa-enso-scraper'
+
     # Cloud Access Credentials
     account_id = os.environ.get("R2_ACCOUNT_ID")
     access_key = os.environ.get("R2_ACCESS_KEY")
