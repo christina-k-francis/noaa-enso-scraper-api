@@ -1,10 +1,10 @@
 """
 API Service for accessing data from the Enhanced Oceanic Niño Index (ONI) dataset. 
-ENSO magnitudes and definitions originated from NOAA's public data table at: 
+ENSO magnitudes and definitions come from the NOAA Climate Prediction Center at: 
 https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php
 
-Author: Christina Francis
-Data Source: NOAA Climate Prediction Center
+Author: Christina K. Francis
+Data Source: NOAA Climate Prediction Center (Public Domain)
 """
 
 import os
@@ -15,8 +15,8 @@ from fastapi import FastAPI, HTTPException, Query
 from enum import Enum
 
 
-# ---- Defining ENUMS (constant values) --------------------------------#
-class ENSOEvent(str, Enum):
+# ---- Defining ENUMS (constant values) for API doc --------------------------------#
+class ENSOType(str, Enum):
     """Valid ENSO event types based on NOAA classifications"""
     NEUTRAL = "Neutral"
     EL_NINO = "ElNino"
@@ -50,14 +50,25 @@ class Season(str, Enum):
 # ---- API App Initialization --------------------------------#
 app = FastAPI(
     title="Enhanced ONI API",
-    description="Access historical and current Oceanic Niño Index data with derived metrics",
+    description="""
+    Access the latest and historical Oceanic Niño Index (ONI) data with derived metrics.
+    
+    **Data Source:** NOAA Climate Prediction Center  
+    **Citation:** Cold & Warm Episodes by Season. National Weather Service Climate Prediction Center.  
+    Retrieved from https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php
+    
+    **Note:** This data is in the public domain as a work of the U.S. Government. 
+    Derived metrics (intensity classification, phase duration, rate of change, percentile ranking) 
+    are computed by this API.
+    """,
     version="1.0.0",
     contact={
-        "name": "Your Name",
-        "email": "your.email@example.com",
+        "name": "Christina K. Francis",
+        "email": "ChristinaKaylaFrancis@gmail.com",
     },
     license_info={
-        "name": "MIT",
+    "name": "CC0 1.0 Universal (Public Domain)",
+    "identifier": "CC0-1.0",
     },
 )
 
@@ -110,7 +121,7 @@ def load_oni_data() -> pd.DataFrame:
 def filter_dataframe(
     df: pd.DataFrame,
     year: int = None,
-    enso_event: ENSOEvent = None,
+    enso_category: ENSOType = None,
     season: Season = None,
     intensity: Intensity = None,
     min_oni: float = None,
@@ -123,7 +134,7 @@ def filter_dataframe(
     input:
         df: pd.DataFrame of Full ONI dataset
         year: int, optional filter by specific year
-        enso_event: ENSOEvent, optional filter by ENSO event type (Neutral, ElNino, LaNina, Unknown)
+        enso_category: ENSOType, optional filter by ENSO event type (Neutral, ElNino, LaNina, Unknown)
         season: Season, optional filter by 3-month season (DJF, JFM, etc.)
         intensity: Intensity, optional filter by intensity classification
         min_oni: float, optional minimum ONI value (inclusive)
@@ -141,8 +152,8 @@ def filter_dataframe(
         filtered = filtered[filtered['year'] == year]
     
     # Apply ENSO event filter
-    if enso_event is not None:
-        filtered = filtered[filtered['ENSO'] == enso_event.value]
+    if enso_category is not None:
+        filtered = filtered[filtered['ENSO'] == enso_category.value]
     
     # Apply season filter
     if season is not None:
@@ -165,20 +176,24 @@ def filter_dataframe(
 @app.get("/")
 def root():
     """
-    Root endpoint providing API information and links to documentation.
+    Root endpoint providing API information, links to documentation, and a list of all other endpoints.
     """
     return {
         "message": "Welcome to the Enhanced ONI API",
         "version": "1.0.0",
         "documentation": "/docs",
+        "citation": "/citation",
         "endpoints": {
             "all_data": "/oni/data",
             "statistics": "/oni/stats",
             "latest": "/oni/latest",
+            "episodes": "/oni/episodes",
             "by_year": "/oni/data?year=2023",
-            "by_event": "/oni/data?enso_event=ElNino",
+            "by_type": "/oni/data?enso_category=ElNino",
             "by_season": "/oni/data?season=DJF",
             "by_intensity": "/oni/data?intensity=Strong",
+            "by_min_oni": "/oni/data?min_oni=0.5",
+            "by_max_oni": "/oni/data?max_oni=2.0"
         }
     }
 
@@ -186,7 +201,7 @@ def root():
 @app.get("/oni/data")
 def get_oni_data(
     year: int = Query(None, description="Filter by specific year (e.g., 2023)"),
-    enso_event: ENSOEvent = Query(None, description="Filter by ENSO event type"),
+    enso_category: ENSOType = Query(None, description="Filter by ENSO category type (e.g., ElNino)"),
     season: Season = Query(None, description="Filter by 3-month season"),
     intensity: Intensity = Query(None, description="Filter by intensity classification"),
     min_oni: float = Query(None, description="Minimum ONI value (inclusive)"),
@@ -206,7 +221,7 @@ def get_oni_data(
     
     Examples:
     - /oni/data?year=2023
-    - /oni/data?enso_event=ElNino&intensity=Strong
+    - /oni/data?enso_category=ElNino&intensity=Strong
     - /oni/data?season=DJF&min_oni=1.0
     - /oni/data?year=2015&season=NDJ
     """
@@ -216,7 +231,7 @@ def get_oni_data(
         
         # Apply filters
         filtered_df = filter_dataframe(
-            df, year, enso_event, season, intensity, min_oni, max_oni
+            df, year, enso_category, season, intensity, min_oni, max_oni
         )
         
         # Check if any results found
@@ -238,7 +253,7 @@ def get_oni_data(
             "count": len(result),
             "filters_applied": {
                 "year": year,
-                "enso_event": enso_event.value if enso_event else None,
+                "enso_category": enso_category.value if enso_category else None,
                 "season": season.value if season else None,
                 "intensity": intensity.value if intensity else None,
                 "min_oni": min_oni,
@@ -253,17 +268,19 @@ def get_oni_data(
 
 @app.get("/oni/stats")
 def get_oni_statistics(
-    year: int = Query(None, description="Calculate stats for specific year"),
-    enso_event: ENSOEvent = Query(None, description="Calculate stats for specific ENSO event"),
+    year: int = Query(None, description="Calculate stats for the specified year"),
+    enso_category: ENSOType = Query(None, description="Calculate stats for the specified ENSO category"),
 ):
     """
-    Get statistical summary of ONI data.
+    Get a statistical summary of queried ONI data.
     
     Returns aggregate statistics including:
-    - Count of observations
+    - Count of total and valid observations
     - Mean ONI value
+    - Median ONI value
     - Min/Max ONI values
-    - Standard deviation
+    - Standard deviation of valid ONI values
+    - 25th and 75th percentile thresholds for valid ONI values
     - Distribution by ENSO event type
     - Distribution by intensity
     
@@ -276,8 +293,8 @@ def get_oni_statistics(
         # Apply filters if specified
         if year is not None:
             df = df[df['year'] == year]
-        if enso_event is not None:
-            df = df[df['ENSO'] == enso_event.value]
+        if enso_category is not None:
+            df = df[df['ENSO'] == enso_category.value]
         
         if df.empty:
             raise HTTPException(status_code=404, detail="No data found for specified filters")
@@ -288,7 +305,7 @@ def get_oni_statistics(
         return {
             "filters": {
                 "year": year,
-                "enso_event": enso_event.value if enso_event else None,
+                "enso_category": enso_category.value if enso_category else None,
             },
             "total_observations": len(df),
             "valid_oni_values": len(valid_oni),
@@ -318,12 +335,10 @@ def get_latest_oni(n: int = Query(12, description="Number of most recent observa
     """
     Get the most recent ONI observations.
     
-    Parameters
-    ----------
-    n : int
-        Number of recent observations to return (default: 12 for last year)
+    input:
+        n: int, number of recent observations to return (default: 12 for last year)
     
-    This is useful for getting current ENSO conditions without knowing the exact date.
+    This is useful for getting current ENSO conditions without specifying the exact date.
     """
     try:
         # Load data
@@ -343,20 +358,20 @@ def get_latest_oni(n: int = Query(12, description="Number of most recent observa
             "count": len(latest),
             "most_recent_year": int(latest['year'].iloc[-1]),
             "most_recent_season": latest['season'].iloc[-1],
-            "data": latest.to_dict('records')
+            "ONI": latest.to_dict('records')
         }
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving latest data: {str(e)}")
 
 
-@app.get("/oni/events")
-def get_enso_events(
-    event_type: ENSOEvent = Query(..., description="Type of ENSO event to analyze"),
+@app.get("/oni/episodes")
+def get_enso_episodes(
+    enso_type: ENSOType = Query(..., description="ENSO category to analyze"),
     min_duration: int = Query(None, description="Minimum event duration in months"),
 ):
     """
-    Get information about ENSO events of a specific type.
+    Get information about ENSO events of the specified type with at least the minimum duration.
     
     This endpoint identifies and returns individual ENSO episodes, including:
     - Start and end dates
@@ -371,12 +386,12 @@ def get_enso_events(
         df = load_oni_data()
         
         # Filter by event type
-        event_df = df[df['ENSO'] == event_type.value].copy()
+        event_df = df[df['ENSO'] == enso_type.value].copy()
         
         if event_df.empty:
             raise HTTPException(
                 status_code=404, 
-                detail=f"No {event_type.value} events found in dataset"
+                detail=f"No {enso_type.value} events found in dataset"
             )
         
         # Group consecutive events by checking phase_duration resets
@@ -399,13 +414,13 @@ def get_enso_events(
                 "end_year": int(group['year'].iloc[-1]),
                 "end_season": group['season'].iloc[-1],
                 "duration_months": duration,
-                "peak_oni": float(group['ONI'].max() if event_type == ENSOEvent.EL_NINO else group['ONI'].min()),
+                "peak_oni": float(group['ONI'].max() if enso_type == ENSOType.EL_NINO else group['ONI'].min()),
                 "average_oni": float(group['ONI'].mean()),
                 "peak_intensity": group.loc[group['ONI'].abs().idxmax(), 'intensity'],
             })
         
         return {
-            "event_type": event_type.value,
+            "enso_type": enso_type.value,
             "total_events": len(events),
             "events": events
         }
@@ -422,3 +437,26 @@ def health_check():
     Render and other platforms use this to verify the service is running.
     """
     return {"status": "healthy", "service": "Enhanced ONI API"}
+
+
+@app.get("/citation")
+def get_citation_info():
+    """
+    Provides citation and attribution information for the ONI data and API.
+    """
+    return {
+        "data_source": {
+            "organization": "NOAA Climate Prediction Center",
+            "dataset": "Oceanic Niño Index (ONI)",
+            "url": "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php",
+            "license": "Public Domain (U.S. Government Work)",
+        },
+        "suggested_citation": "NOAA Climate Prediction Center. Oceanic Niño Index. Retrieved from https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php",
+        "api_info": {
+            "name": "Enhanced ONI API",
+            "version": "1.0.0",
+            "description": "Derived metrics computed independently by this API service",
+            "creator": "Your Name",
+        },
+        "note": "Original NOAA data is in the public domain. Users are encouraged to acknowledge both NOAA CPC as the data source and this API when used in research or publications."
+    }
