@@ -1,6 +1,6 @@
 # NOAA ONI Scraper API
 This is a simple API that provides all Oceanic Niño Index (ONI) data as calculated by the NOAA NCEP. 
-It then enhances the basic information provided by NOAA (ENSO type, magnitude, and associated 3-month rolling season) with derived statistics including:
+It then enhances the basic information provided by NOAA with derived statistics including:
 - ENSO phase duration
 - Intensity classification
 - Rate of change of ONI (dONI/dt)
@@ -31,4 +31,3 @@ response = requests.get(f"{API_URL}{endpoint}", params=params)
 data = response.json()
 pretty_json = json.dumps(data, indent=2)
 print(pretty_json)```
-```
