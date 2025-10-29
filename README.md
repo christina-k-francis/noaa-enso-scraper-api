@@ -1,4 +1,4 @@
-# NOAA ONI Scraper API
+# NOAA ENSO Scraper API
 This is a simple API that provides all Oceanic Niño Index (ONI) data as calculated by the NOAA NCEP. 
 It then enhances the basic information provided by NOAA with derived statistics including:
 - ENSO phase duration
