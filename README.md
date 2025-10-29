@@ -30,4 +30,4 @@ params = {
 response = requests.get(f"{API_URL}{endpoint}", params=params)
 data = response.json()
 pretty_json = json.dumps(data, indent=2)
-print(pretty_json)```
+print(pretty_json)
