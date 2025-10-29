@@ -30,7 +30,8 @@ params = {
 response = requests.get(f"{API_URL}{endpoint}", params=params)
 data = response.json() 
 pretty_json = json.dumps(data, indent=2)
-print(pretty_json)```
+print(pretty_json)
+```
 
 # Feedback
 If you have any questions, recommendations for improvements, or bugs to report, please let us know using [this form](https://docs.google.com/forms/d/e/1FAIpQLSf__Rann5R-2MM_GBGWHl5UOHjWZ3BKszjnfD4RIdiCt_L6SA/viewform?usp=sharing&ouid=105089325141011824344).
