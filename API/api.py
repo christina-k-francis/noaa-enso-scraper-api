@@ -184,7 +184,7 @@ def root():
         "documentation": "/docs",
         "citation": "/citation",
         "endpoints": {
-            "all_data": "/oni/data",
+            "complete_dataset": "/oni/data",
             "statistics": "/oni/stats",
             "latest": "/oni/latest",
             "episodes": "/oni/episodes",
