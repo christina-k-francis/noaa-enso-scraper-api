@@ -4,5 +4,6 @@ lxml
 numpy
 pandas
 prefect
+pyarrow
 requests
 xarray
