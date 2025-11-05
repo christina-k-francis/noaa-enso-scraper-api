@@ -10,6 +10,7 @@ Data Source: NOAA Climate Prediction Center (Public Domain)
 import os
 import boto3
 import tempfile
+import numpy as np
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 from enum import Enum
@@ -245,10 +246,10 @@ def get_oni_data(
         if limit is not None:
             filtered_df = filtered_df.head(limit)
         
-        # Convert to dictionary format for JSON response
-        # 'records' orientation creates a list of dictionaries
-        result = filtered_df.to_dict('records')
-        
+        # Convert to list-dictionary format for JSON response
+        result = filtered_df.replace({np.nan: None}).to_dict(orient='records')
+        # replaced NaN values with NoN for JSON compatibility
+
         return {
             "count": len(result),
             "filters_applied": {
@@ -358,7 +359,7 @@ def get_latest_oni(n: int = Query(12, description="Number of most recent observa
             "count": len(latest),
             "most_recent_year": int(latest['year'].iloc[-1]),
             "most_recent_season": latest['season'].iloc[-1],
-            "ONI": latest.to_dict('records')
+            "ONI": latest.replace({np.nan: None}).to_dict(orient='records')
         }
     
     except Exception as e:
