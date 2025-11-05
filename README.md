@@ -18,7 +18,7 @@ This API functions on the usage of public domain data, and thus is completely fr
 import requests
 import json
 
-API_URL = "https://noaa-enso-scraper-server.onrender.com"
+API_URL = "https://noaa-enso-scraper-api.onrender.com/"
 
 endpoint = "/oni/episodes"
 
