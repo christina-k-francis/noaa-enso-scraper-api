@@ -1,9 +1,11 @@
 beautifulsoup4
 boto3
 lxml
+netCDF4
 numpy
 pandas
 prefect
 pyarrow
 requests
+scipy
 xarray
