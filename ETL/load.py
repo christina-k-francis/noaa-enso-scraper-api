@@ -6,6 +6,7 @@ and relevant derivative metrics to CLoudflare R2 for accessibility.
 # pyarrow
 # s3fs
 
+import numpy as np
 import xarray as xr
 import pandas as pd
 import os
@@ -64,8 +65,13 @@ def save_to_r2(enhanced_xr,
     # Use temporary directory for local file creation
     with tempfile.TemporaryDirectory() as tmpdir:
         
-        # save as Parquet for API
+        # converting xarray to dataframe
         df = enhanced_xr.to_dataframe().reset_index()
+
+        # replacing NaNs with None for JSON compatibility
+        df = df.replace({np.nan: None})
+
+        # save as Parquet for API
         parquet_path = os.path.join(tmpdir, "enhanced_oni_latest.parquet")
         df.to_parquet(parquet_path, engine='pyarrow', compression='snappy')
         
