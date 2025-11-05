@@ -67,10 +67,7 @@ def save_to_r2(enhanced_xr,
         
         # converting xarray to dataframe
         df = enhanced_xr.to_dataframe().reset_index()
-
-        # replacing NaNs with None for JSON compatibility
-        df = df.fillna('None')
-
+        
         # save as Parquet for API
         parquet_path = os.path.join(tmpdir, "enhanced_oni_latest.parquet")
         df.to_parquet(parquet_path, engine='pyarrow', compression='snappy')
