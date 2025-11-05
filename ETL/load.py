@@ -69,7 +69,7 @@ def save_to_r2(enhanced_xr,
         df = enhanced_xr.to_dataframe().reset_index()
 
         # replacing NaNs with None for JSON compatibility
-        df = df.replace({np.nan: None})
+        df = df.fillna(None)
 
         # save as Parquet for API
         parquet_path = os.path.join(tmpdir, "enhanced_oni_latest.parquet")
