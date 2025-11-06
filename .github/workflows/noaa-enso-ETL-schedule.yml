@@ -18,7 +18,7 @@ jobs:
           # Get the day of the month
           DAY=$(date +%d)
           # The first Thursday would fall between days 1-7
-          if [$DAY -le 7]; then
+          if [ $DAY -le 7 ]; then
             echo "is_first_thursday=true" >> $GITHUB_OUTPUT
           else
             echo "is_first_thursday=false" >> $GITHUB_OUTPUT
