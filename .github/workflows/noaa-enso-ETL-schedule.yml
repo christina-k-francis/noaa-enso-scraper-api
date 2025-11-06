@@ -55,7 +55,7 @@ jobs:
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
         run: |
           cd ETL
-          python -c "from alerts import check_for_new_oni_data; check_for_new_oni_data()"
+          python -c "from alert import check_for_new_oni_data; check_for_new_oni_data()"
 
       - name: Run ETL flow
         if: steps.check_thursday.outputs.is_first_thursday == 'true'
