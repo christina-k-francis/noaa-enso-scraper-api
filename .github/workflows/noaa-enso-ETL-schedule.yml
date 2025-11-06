@@ -17,10 +17,13 @@ jobs:
         run: |
           # Get the day of the month
           DAY=$(date +%d)
+          echo "Current day of month: $DAY"
           # The first Thursday would fall between days 1-7
           if [ $DAY -le 7 ]; then
+            echo "This IS the first Thursday of the month - ETL will run"
             echo "is_first_thursday=true" >> $GITHUB_OUTPUT
           else
+            echo "This is NOT the first Thursday of the month - skipping ETL"
             echo "is_first_thursday=false" >> $GITHUB_OUTPUT
           fi
       
