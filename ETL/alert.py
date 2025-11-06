@@ -80,11 +80,6 @@ def send_email_alert(new_data, old_data=None):
     description:
         This FX sends email notification about new ONI data,
         if there is new data found.
-    
-    Set these environment variables:
-    - EMAIL_SENDER: your email address
-    - EMAIL_PASSWORD: app-specific password (for Gmail: https://support.google.com/accounts/answer/185833)
-    - EMAIL_RECIPIENT: where to send alerts
     """
     logger = get_run_logger()
     
@@ -114,19 +109,29 @@ def send_email_alert(new_data, old_data=None):
     ENSO Phase: {phase}
     Season: {new_data['season']} {new_data['year']}
     ONI Value: {oni:.2f}
-    Detected: {new_data.get('timestamp', 'N/A')}
-    
+    Detected at {new_data.get('timestamp', 'N/A')}UTC
     """
     
     if old_data:
+        # checking ENSO phase
+        old_oni = old_data['oni']
+        if old_oni >= 0.5:
+            old_phase = "El Niño"
+        elif old_oni <= -0.5:
+            old_phase = "La Niña"
+        else:
+            old_phase = "Neutral"
+
         body += f"""
-    Previous ONI Data:
+    Latest Stored ONI Data:
+
+    ENSO Phase: {old_phase}
     Season: {old_data['season']} {old_data['year']}
     ONI Value: {old_data['oni']:.2f}
     SSTA Change: {oni - old_data['oni']:.2f}
     """
     
-    body += """ Automated alert from NOAA ENSO Scraper """
+    body += """Automated alert from NOAA ENSO Scraper"""
     
     # Create message
     message = MIMEMultipart()
