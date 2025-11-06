@@ -15,9 +15,14 @@ jobs:
       - name: Check if it's the first Thursday of the month
         id: check_thursday
         run: |
-          # Get the day of the month
-          DAY=$(date +%d)
-          echo "Current day of month: $DAY"
+          # Getting the today's date
+          DAY=$(date +%d) # day of the month
+          MONTH=$(date +%B)
+          YEAR=$(date +%Y)
+          WEEKDAY=$(date +%A)
+          
+          echo "Today is: $WEEKDAY, the $DAY of $MONTH, $YEAR"
+
           # The first Thursday would fall between days 1-7
           if [ $DAY -le 7 ]; then
             echo "This IS the first Thursday of the month - ETL will run"
