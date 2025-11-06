@@ -2,7 +2,7 @@ name: NOAA ENSO Webscraper Schedule
 
 on:
   schedule:
-    - cron: '* 6,18 ? * 5' # runs @ 8AM/8PM UTC
+    - cron: '* 6,,12,18 * * 4' # every Thursday @ 6AM, 12PM, 6PM UTC
   workflow_dispatch: # allows manual triggers
 
 jobs:
@@ -11,18 +11,46 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Check if it's the first Thursday of the month
+        id: check_thursday
+        run: |
+          # Get the day of the month
+          DAY=$(date +%d)
+          # The first Thursday would fall between days 1-7
+          if [$DAY -le 7]; then
+            echo "is_first_thursday=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_first_thursday=false" >> $GITHUB_OUTPUT
+          fi
       
       - name: Set up Python
+        if: steps.check_thursday.outputs.is_first_thursday == 'true'
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
       
       - name: Install dependencies
+        if: steps.check_thursday.outputs.is_first_thursday == 'true'
         run: |
           cd ETL
           pip install -r requirements.txt
       
+      - name: Check for new data and send alert
+        if: steps.check_date.outputs.is_first_thursday == 'true'
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
+          R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+        run: |
+          cd ETL
+          python -c "from alerts import check_for_new_oni_data; check_for_new_oni_data()"
+
       - name: Run ETL flow
+        if: steps.check_thursday.outputs.is_first_thursday == 'true'
         env:
           PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
           PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY }}
