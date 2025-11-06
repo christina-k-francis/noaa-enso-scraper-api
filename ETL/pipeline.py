@@ -18,6 +18,7 @@ def noaa_enso_etl_pipeline_flow():
     # enhancing the ONI data with derived metrics
     processed_ds = process_oni_dataset(raw_ds)
     # uploading the enhanced ONI ds to R2
+    logger.info('Uploading Enhanced ONI dataset to R2')
     results = save_to_r2(processed_ds)
     logger.info(f"Upload Complete!\n{results}")
 
