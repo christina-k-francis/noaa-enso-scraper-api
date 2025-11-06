@@ -37,7 +37,7 @@ jobs:
           pip install -r requirements.txt
       
       - name: Check for new data and send alert
-        if: steps.check_date.outputs.is_first_thursday == 'true'
+        if: steps.check_thursday.outputs.is_first_thursday == 'true'
         env:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
