@@ -4,7 +4,7 @@ It then enhances the basic information provided by NOAA with derived statistics 
 - ENSO phase duration
 - Intensity classification
 - Rate of change of ONI (dONI/dt)
-- 25th and 75th percentile rankings based on all historical data
+- ONI value percentile rankings
 
 # Usage
 ## No API Key Required
