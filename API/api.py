@@ -345,9 +345,6 @@ def get_latest_oni(n: int = Query(12, description="Number of most recent observa
         # Load data
         df = load_oni_data()
         
-        # Sort by year and season to get most recent
-        df = df.sort_values(['year', 'season'])
-        
         # Get last n non-null ONI values
         valid_df = df[df['ONI'].notna()]
         latest = valid_df.tail(n)
@@ -359,7 +356,7 @@ def get_latest_oni(n: int = Query(12, description="Number of most recent observa
             "count": len(latest),
             "most_recent_year": int(latest['year'].iloc[-1]),
             "most_recent_season": latest['season'].iloc[-1],
-            "ONI": latest.replace({np.nan: None}).to_dict(orient='records')
+            "data": latest.replace({np.nan: None}).to_dict(orient='records')
         }
     
     except Exception as e:

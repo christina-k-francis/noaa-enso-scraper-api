@@ -64,7 +64,7 @@ def get_stored_latest_oni():
     df = get_from_r2()
 
     # Get most recent non-null ONI value
-    df = df[df['ONI'].notna()].sort_values(['year', 'season'])
+    df = df[df['ONI'].notna()]
     latest = df.iloc[-1]
     
     return {
