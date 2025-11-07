@@ -1,4 +1,4 @@
-name: NOAA ENSO Webscraper Schedule
+name: NOAA ENSO WebScraper Schedule
 
 on:
   schedule:
