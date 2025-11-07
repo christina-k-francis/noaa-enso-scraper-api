@@ -44,7 +44,7 @@ def fetch_latest_oni_from_noaa():
             cell = cells[cell_idx]
             # obtain relevant information
             oni_value = float(cell.find('span').text)
-            season = seasons[cell_idx] if cell_idx < len(seasons) else None
+            season = seasons[cell_idx-1] if cell_idx < len(seasons) else None
             return {'year': year_value,
                     'season': season,
                     'oni': oni_value,
