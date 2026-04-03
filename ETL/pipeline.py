@@ -2,6 +2,7 @@
 Main ETL pipeline script for execution.
 """
 
+import os
 from prefect import flow, get_run_logger
 from extract import scrape_noaa_oni
 from transform import process_oni_dataset
