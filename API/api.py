@@ -463,3 +463,20 @@ def get_citation_info():
         },
         "note": "Original NOAA data is in the public domain. Users are encouraged to acknowledge both NOAA CPC as the data source and this API when used in research or publications."
     }
+
+@app.get("/status")
+def get_pipeline_status():
+    """
+    Returns the current data freshness and pipeline health.
+    """
+    try:
+        db = _get_db()
+        doc = db.collection("data_freshness").document("current_state").get()
+        if not doc.exists:
+            raise HTTPException(
+                status_code=404,
+                detail="No successful pipeline runs recorded yet."
+            )
+        return doc.to_dict()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
