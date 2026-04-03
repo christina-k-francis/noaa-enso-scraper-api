@@ -38,37 +38,43 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: Install dependencies
+      - name: Set up Docker Buildx
         if: steps.check_thursday.outputs.is_first_thursday == 'true'
-        run: |
-          cd ETL
-          pip install -r requirements.txt
-      
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build ETL Docker image
+        if: steps.check_thursday.outputs.is_first_thursday == 'true'
+        run: docker compose build etl
+
       - name: Check for new data and send alert
         if: steps.check_thursday.outputs.is_first_thursday == 'true'
         env:
-          PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
-          PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY }}
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
           R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+          PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
+          PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY }}
         run: |
-          cd ETL
-          python -c "from alert import check_for_new_oni_data; check_for_new_oni_data()"
+          docker compose run --rm \
+            -e R2_ACCOUNT_ID -e R2_ACCESS_KEY -e R2_SECRET_KEY \
+            -e EMAIL_SENDER -e EMAIL_PASSWORD -e EMAIL_RECIPIENT \
+            -e PREFECT_API_URL -e PREFECT_API_KEY \
+            etl python -c "from alert import check_for_new_oni_data; check_for_new_oni_data()"
 
       - name: Run ETL flow
         if: steps.check_thursday.outputs.is_first_thursday == 'true'
         env:
-          PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
-          PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY }}
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
           R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
           FIREBASE_KEY: ${{ secrets.FIREBASE_KEY }}
-
+          PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
+          PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY }}
         run: |
-          cd ETL
-          python -c "from pipeline import noaa_enso_etl_pipeline_flow; noaa_enso_etl_pipeline_flow()"
+          docker compose run --rm \
+            -e R2_ACCOUNT_ID -e R2_ACCESS_KEY -e R2_SECRET_KEY \
+            -e FIREBASE_KEY -e PREFECT_API_URL -e PREFECT_API_KEY \
+            etl python -c "from pipeline import noaa_enso_etl_pipeline_flow; noaa_enso_etl_pipeline_flow()"
