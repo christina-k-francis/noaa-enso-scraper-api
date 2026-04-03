@@ -35,7 +35,7 @@ def noaa_enso_etl_pipeline_flow():
 
     try:
         # EXTRACT: getting ONI data from NOAA
-        raw_ds = scrape_noaa_oni(current_year=2026)
+        raw_ds = scrape_noaa_oni(current_year=datetime.now().year)
         update_pipeline_stage(run_id, "scrape_status", "success")
         logger.info("Extraction Complete!")
     

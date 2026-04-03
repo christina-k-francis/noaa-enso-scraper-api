@@ -7,12 +7,13 @@ https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php
 import numpy as np 
 import xarray as xr 
 import requests 
+from datetime import datetime
 from prefect import flow
 from bs4 import BeautifulSoup  
 
 @flow(name="scraping-noaa-oni-flow", retries=2)
 def scrape_noaa_oni(url="https://cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php", 
-                    current_year=2025):
+                    current_year=datetime.now().year):
     page = requests.get(url) # Response 200 indicates we are permitted collect data from this website 
     # obtain page's information 
     soup = BeautifulSoup(page.text, 'lxml') 
