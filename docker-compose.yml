@@ -1,0 +1,23 @@
+version: '3.9'
+
+services:
+
+  api:
+    build:
+      context: .               # Root context so firestore_client.py is accessible
+      dockerfile: API/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  etl:
+    build:
+      context: .               # Root context so firestore_client.py is accessible
+      dockerfile: ETL/Dockerfile
+    env_file:
+      - .env
+    profiles:
+      - etl                    # Won't run automatically with `docker-compose up`
+                               # Must be triggered explicitly (see Step 5)
