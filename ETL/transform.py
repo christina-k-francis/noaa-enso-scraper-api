@@ -194,7 +194,6 @@ def process_oni_dataset(oni_xr):
         }
     )
     
-    logger.info("Transformation complete!")
     return enhanced_xr
 
     

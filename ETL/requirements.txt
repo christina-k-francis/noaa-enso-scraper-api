@@ -9,3 +9,4 @@ pyarrow
 requests
 scipy
 xarray
+firebase-admin
