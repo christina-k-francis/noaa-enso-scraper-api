@@ -8,12 +8,17 @@ Data Source: NOAA Climate Prediction Center (Public Domain)
 """
 
 import os
-import boto3
-import tempfile
 import numpy as np
 import pandas as pd
-from fastapi import FastAPI, HTTPException, Query
+import boto3
+import tempfile
 from enum import Enum
+from fastapi import FastAPI, HTTPException, Query
+
+# making it possible to import from the firestore script in a higher-level dir
+import sys 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from firestore_client import _get_db
 
 
 # ---- Defining ENUMS (constant values) for API doc --------------------------------#

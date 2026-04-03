@@ -7,6 +7,10 @@ from extract import scrape_noaa_oni
 from transform import process_oni_dataset
 from load import save_to_r2
 from datetime import datetime, timezone
+
+# making it possible to import from the firestore script in a higher-level dir
+import sys 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from firestore_client import (
     create_pipeline_run,
     update_pipeline_stage,
