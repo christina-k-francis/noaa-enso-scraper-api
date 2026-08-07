@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 from prefect import task, flow, get_run_logger
 from datetime import datetime
 from load import get_from_r2
+from parameters import NOAA_ONI_URL
 
 @task(name="fetch-noaa-latest-oni", retries=2)
 def fetch_latest_oni_from_noaa():
@@ -21,7 +22,7 @@ def fetch_latest_oni_from_noaa():
     output:
         The latest year, season, and ONI value from NOAA.
     """
-    url = "https://cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php"
+    url = NOAA_ONI_URL
     page = requests.get(url) # Response 200 indicates we are permitted collect data from this website 
     # obtain page's information 
     soup = BeautifulSoup(page.text, 'lxml') 

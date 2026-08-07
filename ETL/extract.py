@@ -10,9 +10,10 @@ import requests
 from datetime import datetime
 from prefect import flow
 from bs4 import BeautifulSoup  
+from parameters import NOAA_ONI_URL
 
 @flow(name="scraping-noaa-oni-flow", retries=2)
-def scrape_noaa_oni(url="https://cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php", 
+def scrape_noaa_oni(url=NOAA_ONI_URL, 
                     current_year=datetime.now().year):
     page = requests.get(url) # Response 200 indicates we are permitted collect data from this website 
     # obtain page's information 

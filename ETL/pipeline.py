@@ -8,6 +8,7 @@ from extract import scrape_noaa_oni
 from transform import process_oni_dataset
 from load import save_to_r2
 from datetime import datetime, timezone
+from parameters import NOAA_ONI_URL
 
 # making it possible to import from the firestore script in a higher-level dir
 import sys 
@@ -61,8 +62,8 @@ def noaa_enso_etl_pipeline_flow():
             latest_year=int(latest_row["year"]),
             latest_season=str(latest_row["season"]),
             total_records=len(valid),
-            source_url="https://cpc.ncep.noaa.gov/products/analysis_monitoring/"
-                       "ensostuff/ONI_v5.php",
+            source_url=NOAA_ONI_URL,
+            last_updated=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         )
         
         # Run complete
