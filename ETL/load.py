@@ -15,11 +15,12 @@ import tempfile
 import logging
 import warnings
 from prefect import task, get_run_logger
+import parameters
 
 @task(name='saving-dataset-to-R2', retries=2)
 def save_to_r2(enhanced_xr,
-               bucket='noaa-enso-scraper',
-               prefix: str = "data",
+               bucket=parameters.R2_BUCKET,
+               prefix: str = parameters.R2_PREFIX,
                save_netcdf: bool=True
                ):
     """
@@ -69,10 +70,10 @@ def save_to_r2(enhanced_xr,
         df = enhanced_xr.to_dataframe().reset_index()
         
         # save as Parquet for API
-        parquet_path = os.path.join(tmpdir, "enhanced_oni_latest.parquet")
+        parquet_path = os.path.join(tmpdir, parameters.PARQUET_FILENAME)
         df.to_parquet(parquet_path, engine='pyarrow', compression='snappy')
         
-        parquet_key = f"{prefix}/enhanced_oni_latest.parquet"
+        parquet_key = f"{prefix}/{parameters.PARQUET_FILENAME}"
         parquet_size = os.path.getsize(parquet_path)
         
         logger.info(f"uploading Parquet to R2...")
@@ -101,10 +102,10 @@ def save_to_r2(enhanced_xr,
         # Upload enhanced df as a NetCDF file as an optional backup
         if save_netcdf:
             logger.info("Converting to NetCDF format...")
-            netcdf_path = os.path.join(tmpdir, "enhanced_oni_latest.nc")
+            netcdf_path = os.path.join(tmpdir, parameters.NETCDF_FILENAME)
             enhanced_xr.to_netcdf(netcdf_path)
             
-            netcdf_key = f"{prefix}/enhanced_oni_latest.nc"
+            netcdf_key = f"{prefix}/{parameters.NETCDF_FILENAME}"
             netcdf_size = os.path.getsize(netcdf_path)
             
             logger.info(f"Uploading NetCDF to R2...")
@@ -132,9 +133,9 @@ def save_to_r2(enhanced_xr,
 
 @task(name="retrieving-df-from-R2", retries=3, retry_delay_seconds=10)
 def get_from_r2(
-    bucket='noaa-enso-scraper',
-    prefix: str = "data",
-    format: str = "parquet"
+    bucket=parameters.R2_BUCKET,
+    prefix: str = parameters.R2_PREFIX,
+    format: str = parameters.FORMAT_PARQUET
     ):
     """
     description:
@@ -172,8 +173,8 @@ def get_from_r2(
         aws_secret_access_key=secret_key,
     )
     
-    if format == "parquet":
-        key = f"{prefix}/enhanced_oni_latest.parquet"
+    if format == parameters.FORMAT_PARQUET:
+        key = f"{prefix}/{parameters.PARQUET_FILENAME}"
         logger.info('Downloading Parquet from R2...')
 
         with tempfile.NamedTemporaryFile(suffix='.parquet', delete=False) as tmp:
@@ -186,8 +187,8 @@ def get_from_r2(
         logger.info(f"Loaded Parquet file as pandas dataframe")
         return df
     
-    elif format == "netcdf":
-        key = f"{prefix}/enhanced_oni_latest.nc"
+    elif format == parameters.FORMAT_NETCDF:
+        key = f"{prefix}/{parameters.NETCDF_FILENAME}"
         logger.info('Downloading netCDF from R2...')
 
         with tempfile.NamedTemporaryFile(suffix='.nc', delete=False) as tmp:
@@ -201,6 +202,6 @@ def get_from_r2(
         return ds
     
     else:
-        raise ValueError(f"Unsupported format: {format}. Use 'parquet' or 'netcdf'.")
+        raise ValueError(f"Unsupported format: {format}. Use '{parameters.FORMAT_PARQUET}' or '{parameters.FORMAT_NETCDF}'.")
 
 

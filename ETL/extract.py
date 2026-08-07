@@ -10,10 +10,10 @@ import requests
 from datetime import datetime
 from prefect import flow
 from bs4 import BeautifulSoup  
-from parameters import NOAA_ONI_URL
+import parameters
 
 @flow(name="scraping-noaa-oni-flow", retries=2)
-def scrape_noaa_oni(url=NOAA_ONI_URL, 
+def scrape_noaa_oni(url=parameters.NOAA_ONI_URL, 
                     current_year=datetime.now().year):
     page = requests.get(url) # Response 200 indicates we are permitted collect data from this website 
     # obtain page's information 
@@ -63,24 +63,24 @@ def scrape_noaa_oni(url=NOAA_ONI_URL,
                     if blue_span is not None:
                         # La Niña
                         ONI[year_idx, season_idx] = float(blue_span.text)
-                        ENSO.append('LaNina')
+                        ENSO.append(parameters.ENSO_PHASE_LA_NINA)
                         Year.append(year_value)
                         Season.append(seasons[season_idx])
                     elif red_span is not None:
                         # El Niño
                         ONI[year_idx, season_idx] = float(red_span.text)
-                        ENSO.append('ElNino')
+                        ENSO.append(parameters.ENSO_PHASE_EL_NINO)
                         Year.append(year_value)
                         Season.append(seasons[season_idx])
                     elif black_span is not None:
                         # Neutral
                         ONI[year_idx, season_idx] = float(black_span.text)
-                        ENSO.append('Neutral')
+                        ENSO.append(parameters.ENSO_PHASE_NEUTRAL)
                         Year.append(year_value)
                         Season.append(seasons[season_idx])
                     else:
                         # Cell exists but no data (incomplete year)
-                        ENSO.append('Unknown')
+                        ENSO.append(parameters.ENSO_PHASE_UNKNOWN)
                         Year.append(year_value)
                         Season.append(seasons[season_idx])
                     
@@ -92,7 +92,7 @@ def scrape_noaa_oni(url=NOAA_ONI_URL,
     # adding info. for seasons with missing data (cell doesn't exist, incomplete year)
     if latest_year_count < 12:
         year_list = np.repeat(year_value, (12-latest_year_count)).tolist()
-        enso_list = np.repeat('Unknown', (12-latest_year_count)).tolist()
+        enso_list = np.repeat(parameters.ENSO_PHASE_UNKNOWN, (12-latest_year_count)).tolist()
         Year = Year + year_list
         ENSO = ENSO + enso_list
         Season = Season + Season[latest_year_count:12]
@@ -100,12 +100,12 @@ def scrape_noaa_oni(url=NOAA_ONI_URL,
     # create xarray dataset
     ONI_xr = xr.Dataset( 
         { 
-            "ONI": (["year","season"], ONI), 
+            parameters.DATASET_VAR_ONI: ([parameters.DIM_YEAR, parameters.DIM_SEASON], ONI), 
         }, 
         coords={ 
-            "year": np.arange(1950, current_year + 1), 
-            "season": Season[0:12], 
-            "ENSO": (["year","season"], np.reshape(ENSO, ONI.shape)), 
+            parameters.DIM_YEAR: np.arange(1950, current_year + 1), 
+            parameters.DIM_SEASON: Season[0:12], 
+            parameters.DATASET_VAR_ENSO: ([parameters.DIM_YEAR, parameters.DIM_SEASON], np.reshape(ENSO, ONI.shape)), 
         },
         attrs={
             "source": "NOAA Climate Prediction Center",

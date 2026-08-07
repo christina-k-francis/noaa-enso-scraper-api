@@ -11,6 +11,7 @@ import numpy as np
 from prefect import task, flow, get_run_logger
 import logging
 import warnings
+import parameters
 
 @task(name="classifying-ENSO-intensities", retries=2)
 def calculate_intensity_array_task(oni_values):
@@ -34,7 +35,7 @@ def calculate_intensity_array_task(oni_values):
         - Very Strong: |ONI| ≥ 2.0
         """
         if np.isnan(oni_value):
-            return 'Unknown'
+            return parameters.ENSO_PHASE_UNKNOWN
         
         abs_oni = abs(oni_value)
         
@@ -157,8 +158,8 @@ def process_oni_dataset(oni_xr):
     warnings.filterwarnings("ignore", category=UserWarning)
 
     # Extract ONI values and ENSO phases
-    oni_values = oni_xr['ONI'].values
-    enso_phases = oni_xr['ENSO'].values
+    oni_values = oni_xr[parameters.DATASET_VAR_ONI].values
+    enso_phases = oni_xr[parameters.DATASET_VAR_ENSO].values
     
     logger.info("Calculating ENSO intensity classifications...")
     intensity = calculate_intensity_array_task(oni_values)
@@ -176,16 +177,16 @@ def process_oni_dataset(oni_xr):
     logger.info("Building the enhanced dataset...")
     enhanced_xr = xr.Dataset(
         {
-            "ONI": (["year", "season"], oni_values),
-            "intensity": (["year", "season"], intensity),
-            "phase_duration": (["year", "season"], phase_duration),
-            "rate_of_change": (["year", "season"], rate_of_change),
-            "percentile": (["year", "season"], percentiles),
+            parameters.DATASET_VAR_ONI: ([parameters.DIM_YEAR, parameters.DIM_SEASON], oni_values),
+            parameters.FIELD_INTENSITY: ([parameters.DIM_YEAR, parameters.DIM_SEASON], intensity),
+            parameters.FIELD_PHASE_DURATION: ([parameters.DIM_YEAR, parameters.DIM_SEASON], phase_duration),
+            parameters.FIELD_RATE_OF_CHANGE: ([parameters.DIM_YEAR, parameters.DIM_SEASON], rate_of_change),
+            parameters.FIELD_PERCENTILE: ([parameters.DIM_YEAR, parameters.DIM_SEASON], percentiles),
         },
         coords={
-            "year": oni_xr.coords["year"],
-            "season": oni_xr.coords["season"],
-            "ENSO": (["year", "season"], enso_phases),
+            parameters.DIM_YEAR: oni_xr.coords[parameters.DIM_YEAR],
+            parameters.DIM_SEASON: oni_xr.coords[parameters.DIM_SEASON],
+            parameters.DATASET_VAR_ENSO: ([parameters.DIM_YEAR, parameters.DIM_SEASON], enso_phases),
         },
         attrs={
             **oni_xr.attrs,  # Preserve original attributes

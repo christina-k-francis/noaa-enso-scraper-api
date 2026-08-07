@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 from prefect import task, flow, get_run_logger
 from datetime import datetime
 from load import get_from_r2
-from parameters import NOAA_ONI_URL
+import parameters
 
 @task(name="fetch-noaa-latest-oni", retries=2)
 def fetch_latest_oni_from_noaa():
@@ -22,7 +22,7 @@ def fetch_latest_oni_from_noaa():
     output:
         The latest year, season, and ONI value from NOAA.
     """
-    url = NOAA_ONI_URL
+    url = parameters.NOAA_ONI_URL
     page = requests.get(url) # Response 200 indicates we are permitted collect data from this website 
     # obtain page's information 
     soup = BeautifulSoup(page.text, 'lxml') 
@@ -98,11 +98,11 @@ def send_email_alert(new_data, old_data=None):
     # Determine ENSO phase
     oni = new_data['oni']
     if oni >= 0.5:
-        phase = "El Niño"
+        phase = parameters.ENSO_PHASE_LABEL_EL_NINO
     elif oni <= -0.5:
-        phase = "La Niña"
+        phase = parameters.ENSO_PHASE_LABEL_LA_NINA
     else:
-        phase = "Neutral"
+        phase = parameters.ENSO_PHASE_LABEL_NEUTRAL
     
     body = f"""
     New NOAA ONI Value Detected!
@@ -117,11 +117,11 @@ def send_email_alert(new_data, old_data=None):
         # checking ENSO phase
         old_oni = old_data['oni']
         if old_oni >= 0.5:
-            old_phase = "El Niño"
+            old_phase = parameters.ENSO_PHASE_LABEL_EL_NINO
         elif old_oni <= -0.5:
-            old_phase = "La Niña"
+            old_phase = parameters.ENSO_PHASE_LABEL_LA_NINA
         else:
-            old_phase = "Neutral"
+            old_phase = parameters.ENSO_PHASE_LABEL_NEUTRAL
 
         body += f"""
     Latest Stored ONI Data:
